@@ -10,25 +10,22 @@ extension Home {
 
         @StateObject var state = StateModel()
         @State var isStatusPopupPresented = false
+        @State var showCancelAlert = false
 
-        // Average/Median/Readings and CV/SD titles and values switches when you tap them
-        @State var averageOrMedianTitle = NSLocalizedString("Average", comment: "")
-        @State var median_ = ""
-        @State var average_ = ""
-        @State var readings = ""
-
-        @State var averageOrmedian = ""
-        @State var CV_or_SD_Title = NSLocalizedString("CV", comment: "CV")
-        @State var cv_ = ""
-        @State var sd_ = ""
-        @State var CVorSD = ""
-        // Switch between Loops and Errors when tapping in statPanel
-        @State var loopStatTitle = NSLocalizedString("Loops", comment: "Nr of Loops in statPanel")
+        @Environment(\.managedObjectContext) var moc
+        @Environment(\.colorScheme) var colorScheme
 
         @FetchRequest(
             entity: Override.entity(),
             sortDescriptors: [NSSortDescriptor(key: "date", ascending: false)]
         ) var fetchedPercent: FetchedResults<Override>
+
+        @FetchRequest(
+            entity: OverridePresets.entity(),
+            sortDescriptors: [NSSortDescriptor(key: "name", ascending: true)], predicate: NSPredicate(
+                format: "name != %@", "" as String
+            )
+        ) var fetchedProfiles: FetchedResults<OverridePresets>
 
         @FetchRequest(
             entity: TempTargets.entity(),
@@ -96,8 +93,8 @@ extension Home {
                 Spacer()
             }
             .frame(maxWidth: .infinity)
-            .padding(.top, geo.safeAreaInsets.top)
-            .padding(.bottom, 6)
+            .padding(.top, 10 + geo.safeAreaInsets.top)
+            .padding(.bottom, 10)
             .background(Color.gray.opacity(0.2))
         }
 
@@ -212,8 +209,8 @@ extension Home {
                 let hbt = sliderTTpresets.first?.hbt ?? 0
                 string = ", " + (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target) as NSNumber) ?? "") + " %"
             } /* else if enactedSliderTT.first?.enabled ?? false {
-                 let hbt = enactedSliderTT.first?.hbt ?? 0
-                 string = ", " + (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target) as NSNumber) ?? "") + " %"
+             let hbt = enactedSliderTT.first?.hbt ?? 0
+             string = ", " + (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target) as NSNumber) ?? "") + " %"
              } */
 
             let percentString = state
@@ -389,6 +386,63 @@ extension Home {
             .modal(for: .dataTable, from: self)
         }
 
+        @ViewBuilder private func profiles(_: GeometryProxy) -> some View {
+            ZStack {
+                Rectangle().fill(Color.gray.opacity(0.2)).frame(maxHeight: 45)
+                HStack {
+                    Image(systemName: "person.3.sequence.fill")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(
+                            !(fetchedPercent.first?.enabled ?? false) ? .green : .cyan,
+                            !(fetchedPercent.first?.enabled ?? false) ? .cyan : .green,
+                            .purple
+                        )
+
+                    Text(selectedProfile()).foregroundColor(.secondary)
+
+                    if fetchedPercent.first?.enabled ?? false {
+                        Button { showCancelAlert.toggle() }
+                        label: {
+                            Image(systemName: "xmark")
+                                .foregroundStyle(.secondary)
+                        }.padding(.trailing, 20)
+                    }
+
+                    Button { state.showModal(for: .overrideProfilesConfig) }
+                    label: {
+                        Image(systemName: "pencil.line")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(colorScheme == .light ? .black : .white, .blue)
+                    }
+                }
+            }
+            .alert(
+                "Return to Normal?", isPresented: $showCancelAlert,
+                actions: {
+                    Button("No", role: .cancel) {}
+                    Button("Yes", role: .destructive) {
+                        state.cancelProfile()
+                    }
+                }, message: { Text("This will change settings back to your normal profile.") }
+            )
+        }
+
+        private func selectedProfile() -> String {
+            var profileString = ""
+            if fetchedPercent.first?.enabled ?? false, !(fetchedPercent.first?.isPreset ?? false) {
+                profileString = NSLocalizedString("Custom", comment: "Custom unsaved Profile")
+            } else if !(fetchedPercent.first?.enabled ?? false) {
+                profileString = NSLocalizedString("Normal Profile", comment: "Your normal Profile used. Use short string")
+            } else {
+                let id_ = fetchedPercent.first?.id ?? ""
+                let profile = fetchedProfiles.filter({ $0.id == id_ }).first
+                if profile != nil {
+                    profileString = profile?.name?.description ?? ""
+                }
+            }
+            return profileString
+        }
+
         @ViewBuilder private func bottomPanel(_ geo: GeometryProxy) -> some View {
             ZStack {
                 Rectangle().fill(Color.gray.opacity(0.2)).frame(height: 50 + geo.safeAreaInsets.bottom)
@@ -470,6 +524,7 @@ extension Home {
             GeometryReader { geo in
                 VStack(spacing: 0) {
                     header(geo)
+                    profiles(geo)
                     infoPanel
                     mainChart
                     legendPanel
