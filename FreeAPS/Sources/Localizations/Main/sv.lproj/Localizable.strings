@@ -1143,6 +1143,9 @@ Enact a temp Basal or a temp target */
 /* Display fat and protein entities */
 "Fat & Protein" = "Fett & protein";
 
+/* FPU Setttings Title */
+"Fat and Protein" = "Omvandling";
+
 /* */
 "Hide Fat & Protein" = "Dölj fett & protein";
 
@@ -1181,12 +1184,92 @@ Enact a temp Basal or a temp target */
 
 /* Your normal Profile. Use a short string */
 "Normal Profile" = "Normal Profil";
+<<<<<<< HEAD
+=======
 
 /* Custom but unsaved Profile */
 "Custom Profile" = "Anpassad Profil";
 
 /* */
 "Profiles" = "Profiler";
+
+/* */
+"More options" = "Fler alternativ";
+
+/* */
+"Schedule when SMBs are Off" = "Schemalägg när autobolusar ska vara av ";
+
+/* */
+"Change ISF and CR" = "Ändra ISF and CR";
+
+/* */
+"Change ISF" = "Ändra ISF";
+
+/* */
+"Change CR" = "Ändra CR";
+
+/* */
+"SMB Minutes" = "SMB-minuter";
+
+/* */
+"UAM SMB Minutes" = "UAM-SMB-minuter";
+
+/* */
+"Start new Profile" = "Starta ny profil";
+
+/* */
+"Save as Profile" = "Spara som profil";
+
+/* */
+"Return to Normal" = "Tillbaka till normal profil";
+
+/* Alert */
+"Return to Normal?" = "Tillbaka till normal profil?";
+
+/* */
+"This will change settings back to your normal profile." = "Detta kommer att ändra tillbaka till dina normala inställningar ";
+
+/* Start Profile Alert */
+"Start Profile" = "Starta profil";
+
+/* */
+"Your profile basal insulin will be adjusted with the override percentage and your profile ISF and CR will be inversly adjusted with the percentage." = "Din vanliga basal kommer att justeras procentuellt enligt ovan, medan din normala korrektionsfaktor och insulinkvot CR kommer att bli omvänt justerade.";
+
+/* */
+"Starting this override will change your Profiles and/or your Target Glucose used for looping during the entire selected duration. Tapping ”Start Profile” will start your new profile or edit your current active profile." = "Om du klickar 'Starta profil' kommer detta att tillfälligt att ändra dina normala inställningar för under hela perioden som du valt";
+
+/* Change Target glucose in profile settings */
+"Override Profile Target" = "Ändra målvärde";
+
+/* Alert string. Keep spaces. */
+" SMBs are disabled either by schedule or during the entire duration." = " Autobolusar är helt eller delvis av.";
+
+/* Alert strings. Keep spaces */
+" infinite duration." = " aktiv tillsvidare.";
+>>>>>>> fastlane
+
+/* Custom but unsaved Profile */
+"Custom Profile" = "Anpassad Profil";
+
+/* */
+<<<<<<< HEAD
+"Profiles" = "Profiler";
+=======
+"Meal Presets" = "Förval";
+
+/* */
+"Empty" = "Inget";
+
+/* */
+"Delete Selected Preset" = "Radera detta förval";
+
+/* */
+"Enter Meal Preset Name" = "Ange namn på måltid";
+
+/* */
+"Name Of Dish" = "Namn på rätt";
+"Currently no Override active" = "Inget undantag aktivt";
+>>>>>>> fastlane
 
 /* */
 "More options" = "Fler alternativ";
@@ -1251,6 +1334,7 @@ Enact a temp Basal or a temp target */
 /* Service Section */
 "Statistics and Home View" = "Statistik och Diagram";
 
+<<<<<<< HEAD
 /* Alert text */
 "Delete carb equivalents?" = "Radera dessa poster?";
 
@@ -1269,11 +1353,11 @@ Enact a temp Basal or a temp target */
 /* */
 "Name Of Dish" = "Namn på rätt";
 
+=======
+>>>>>>> fastlane
 /* Save Carbs and continue to bolus recommendation */
 "Save and continue" = "Spara och fortsätt";
 
-/* */
-"Save as Preset" = "Spara som förval";
 
 /* ----------------------- New Bolus Calculator ---------------------------*/
 /* Warning about bolus recommendation. Title */
