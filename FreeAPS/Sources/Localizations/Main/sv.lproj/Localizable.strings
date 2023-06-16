@@ -1184,8 +1184,6 @@ Enact a temp Basal or a temp target */
 
 /* Your normal Profile. Use a short string */
 "Normal Profile" = "Normal Profil";
-<<<<<<< HEAD
-=======
 
 /* Custom but unsaved Profile */
 "Custom Profile" = "Anpassad Profil";
@@ -1252,9 +1250,9 @@ Enact a temp Basal or a temp target */
 "Custom Profile" = "Anpassad Profil";
 
 /* */
-<<<<<<< HEAD
 "Profiles" = "Profiler";
-=======
+
+/* */
 "Meal Presets" = "Förval";
 
 /* */
@@ -1334,7 +1332,6 @@ Enact a temp Basal or a temp target */
 /* Service Section */
 "Statistics and Home View" = "Statistik och Diagram";
 
-<<<<<<< HEAD
 /* Alert text */
 "Delete carb equivalents?" = "Radera dessa poster?";
 
@@ -1353,8 +1350,6 @@ Enact a temp Basal or a temp target */
 /* */
 "Name Of Dish" = "Namn på rätt";
 
-=======
->>>>>>> fastlane
 /* Save Carbs and continue to bolus recommendation */
 "Save and continue" = "Spara och fortsätt";
 
