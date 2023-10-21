@@ -149,8 +149,6 @@ final class BaseFetchGlucoseManager: FetchGlucoseManager, Injectable {
 
         deviceDataManager.heartbeat(date: Date())
 
-        nightscoutManager.uploadGlucose()
-
         let glucoseForHealth = filteredByDate.filter { !glucoseFromHealth.contains($0) }
 
         guard glucoseForHealth.isNotEmpty else {
