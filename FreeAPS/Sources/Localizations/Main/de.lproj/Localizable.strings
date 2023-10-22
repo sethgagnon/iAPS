@@ -350,6 +350,9 @@ Enact a temp Basal or a temp target */
 /* Import Error */
 "Can't find the default Nightscout Profile." = "Can't find the default Nightscout Profile.";
 
+/* Add Blood Glucose Test, header */
+"Blood Glucose Test" = "Blood Glucose Test";
+
 /* Add Medtronic pump */
 "Add Medtronic" = "Medtronic-Pumpe hinzufügen";
 
@@ -1167,6 +1170,9 @@ Enact a temp Basal or a temp target */
 
 /* An Automatic delivered bolus (SMB) */
 "SMB" = "SMB";
+
+/* A manually entered dose of non-pump insulin */
+"Non-pump Insulin" = "Externes Insulin";
 
 /* Status highlight when manual temp basal is running. */
 "Manual Basal" = "Manuelle Temporäre Basalrate";
