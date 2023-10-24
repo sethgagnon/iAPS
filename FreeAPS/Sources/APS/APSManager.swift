@@ -539,10 +539,10 @@ final class BaseAPSManager: APSManager, Injectable {
         switch action {
         case let .bolus(amount):
             if let error = verifyStatus() {
-                processError(error)
-                return
+                debug(.nightscout, "Remot bolus error: " + error.localizedDescription)
             }
             let roundedAmount = pump.roundToSupportedBolusVolume(units: Double(amount))
+
             pump.enactBolus(units: roundedAmount, activationType: .manualRecommendationAccepted) { error in
                 if let error = error {
                     // warning(.apsManager, "Announcement Bolus failed with error: \(error.localizedDescription)")
