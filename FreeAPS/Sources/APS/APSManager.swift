@@ -539,7 +539,8 @@ final class BaseAPSManager: APSManager, Injectable {
         switch action {
         case let .bolus(amount):
             if let error = verifyStatus() {
-                debug(.nightscout, "Remot bolus error: " + error.localizedDescription)
+                processError(error)
+                return
             }
             let roundedAmount = pump.roundToSupportedBolusVolume(units: Double(amount))
 
