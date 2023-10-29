@@ -42,15 +42,15 @@ struct MainChartView: View {
         static let announcementSize: CGFloat = 8
         static let announcementScale: CGFloat = 2.5
         static let owlSeize: CGFloat = 25
-        static let owlOffset: CGFloat = 60
+        static let owlOffset: CGFloat = 80
     }
 
     private enum Command {
-        static let open = "🟢"
-        static let closed = "🔴"
+        static let open = "🔴"
+        static let closed = "🟢"
         static let suspend = "❌"
         static let resume = "✅"
-        static let tempbasal = "💧..."
+        static let tempbasal = "basal"
         static let bolus = "💧"
     }
 
@@ -406,7 +406,7 @@ struct MainChartView: View {
                     info.note.contains("tempbasal") ?
                     Command.tempbasal : Command.bolus
                 VStack {
-                    Text(type).font(.caption2).foregroundStyle(Color(.tempBasal))
+                    Text(type).font(.caption2).foregroundStyle(.orange)
                     Image("owl").resizable().frame(maxWidth: Config.owlSeize, maxHeight: Config.owlSeize).scaledToFill()
                 }.position(position).asAny()
             }

@@ -43,6 +43,7 @@ extension Settings {
                     Text("Carb Ratios").navigationLink(to: .crEditor, from: self)
                     Text("Target Glucose").navigationLink(to: .targetsEditor, from: self)
                     Text("Autotune").navigationLink(to: .autotuneConfig, from: self)
+                    Text("Bolus Calculator").navigationLink(to: .bolusCalculatorConfig, from: self)
                 }
 
                 Section(header: Text("Developer")) {
@@ -126,7 +127,7 @@ extension Settings {
             .onAppear(perform: configureView)
             .navigationTitle("Settings")
             .navigationBarItems(leading: Button("Close", action: state.hideSettingsModal))
-            .navigationBarTitleDisplayMode(.automatic)
+            .navigationBarTitleDisplayMode(.inline)
             .onDisappear(perform: { state.uploadProfileAndSettings(false) })
         }
     }
