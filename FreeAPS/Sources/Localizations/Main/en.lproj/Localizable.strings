@@ -121,6 +121,9 @@
 /*  */
 "Carbs required" = "Carbs required";
 
+/* Saved Food Presets */
+"Saved Food" = "Saved Food";
+
 /* */
 "Are you sure?" = "Are you sure?";
 
@@ -1397,6 +1400,12 @@ Enact a temp Basal or a temp target */
 
 /* */
 "Eventual Glucose" = "Eventual Glucose";
+
+/* */
+"Please wait" = "Please wait";
+
+/* */
+"Glucose, " = "Glucose, ";
 
 /* */
 "Target Glucose" = "Target Glucose";
