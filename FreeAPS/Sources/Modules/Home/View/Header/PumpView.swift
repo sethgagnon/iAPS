@@ -6,7 +6,10 @@ struct PumpView: View {
     @Binding var name: String
     @Binding var expiresAtDate: Date?
     @Binding var timerDate: Date
-    @Binding var timeZone: TimeZone?
+
+    @State var state: Home.StateModel
+
+    @Environment(\.colorScheme) var colorScheme
 
     private var reservoirFormatter: NumberFormatter {
         let formatter = NumberFormatter()
@@ -21,47 +24,70 @@ struct PumpView: View {
         return formatter
     }
 
+    private var numberFormatter: NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }
+
+    private var dateFormatter: DateFormatter {
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeStyle = .short
+        return dateFormatter
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        HStack {
+            Text("IOB").font(.callout).foregroundColor(.secondary)
+            Text(
+                (numberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0") +
+                    NSLocalizedString(" U", comment: "Insulin unit")
+            )
+            .font(.callout).fontWeight(.bold)
+
+            Spacer()
+
+            Text("COB").font(.callout).foregroundColor(.secondary)
+            Text(
+                (numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0") +
+                    NSLocalizedString(" g", comment: "gram of carbs")
+            )
+            .font(.callout).fontWeight(.bold)
+
+            Spacer()
+
             if let reservoir = reservoir {
                 HStack {
                     Image(systemName: "drop.fill")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 10)
+                        .frame(maxHeight: 15)
                         .foregroundColor(reservoirColor)
                     if reservoir == 0xDEAD_BEEF {
-                        Text("50+ " + NSLocalizedString("U", comment: "Insulin unit")).font(.footnote)
-                            .fontWeight(.bold)
+                        Text("50+ " + NSLocalizedString("U", comment: "Insulin unit")).font(.callout).fontWeight(.bold)
                     } else {
                         Text(
                             reservoirFormatter
                                 .string(from: reservoir as NSNumber)! + NSLocalizedString(" U", comment: "Insulin unit")
                         )
-                        .font(.footnote).fontWeight(.bold)
+                        .font(.callout).fontWeight(.bold)
                     }
-
-                    if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
-                        Image(systemName: "clock.badge.exclamationmark.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 13)
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(.red, Color(.warning))
-                            .padding(.bottom, 10)
-                    }
-                }.frame(alignment: .top)
+                }
             }
+
+            Spacer()
+
             if let battery = battery, battery.display ?? false, expiresAtDate == nil {
                 HStack {
                     Image(systemName: "battery.100")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 10)
+                        .frame(maxHeight: 15)
                         .foregroundColor(batteryColor)
-                    Text("\(Int(battery.percent ?? 100)) %").font(.footnote)
+                    Text("\(Int(battery.percent ?? 100)) %").font(.callout)
                         .fontWeight(.bold)
-                }.frame(alignment: .bottom)
+                }
             }
 
             if let date = expiresAtDate {
@@ -69,11 +95,11 @@ struct PumpView: View {
                     Image(systemName: "stopwatch.fill")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 10)
+                        .frame(maxHeight: 15)
                         .foregroundColor(timerColor)
-                    Text(remainingTimeString(time: date.timeIntervalSince(timerDate))).font(.footnote)
-                        .fontWeight(.bold)
-                }.frame(alignment: .bottom)
+
+                    Text(remainingTimeString(time: date.timeIntervalSince(timerDate))).font(.callout).fontWeight(.bold)
+                }
             }
         }
     }
@@ -109,11 +135,11 @@ struct PumpView: View {
 
         switch percent {
         case ...10:
-            return .loopRed
+            return .red
         case ...20:
-            return .loopYellow
+            return .yellow
         default:
-            return .loopGreen
+            return .green
         }
     }
 
@@ -124,11 +150,11 @@ struct PumpView: View {
 
         switch reservoir {
         case ...10:
-            return .loopRed
+            return .red
         case ...30:
-            return .loopYellow
+            return .yellow
         default:
-            return .insulin
+            return .blue
         }
     }
 
@@ -141,11 +167,22 @@ struct PumpView: View {
 
         switch time {
         case ...8.hours.timeInterval:
-            return .loopRed
+            return .red
         case ...1.days.timeInterval:
-            return .loopYellow
+            return .yellow
         default:
-            return .loopGreen
+            return .green
         }
+    }
+}
+
+struct Hairline: View {
+    let color: Color
+
+    var body: some View {
+        Rectangle()
+            .fill(color)
+            .frame(width: UIScreen.main.bounds.width / 1.3, height: 1)
+            .opacity(0.5)
     }
 }

@@ -61,10 +61,14 @@ extension Home {
         @Published var thresholdLines: Bool = false
         @Published var timeZone: TimeZone?
         @Published var hours: Int16 = 6
+        @Published var totalBolus: Decimal = 0
+        @Published var isStatusPopupPresented: Bool = false
+        @Published var tins: Bool = false
 
         let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
 
         override func subscribe() {
+            calculateTINS()
             setupGlucose()
             setupBasals()
             setupBoluses()
@@ -98,6 +102,7 @@ extension Home {
             displayXgridLines = settingsManager.settings.xGridLines
             displayYgridLines = settingsManager.settings.yGridLines
             thresholdLines = settingsManager.settings.rulerMarks
+            tins = settingsManager.settings.tins
 
             broadcaster.register(GlucoseObserver.self, observer: self)
             broadcaster.register(SuggestionObserver.self, observer: self)
@@ -267,6 +272,29 @@ extension Home {
             }
         }
 
+        // MARK: WORKS....BUT MAYBE TIMEZONE PROBLEMS COULD OCCUR
+
+        func calculateTINS() -> String {
+            let date = Date()
+            let calendar = Calendar.current
+            let offset = hours
+
+            var offsetComponents = DateComponents()
+            //        offsetComponents.hour = -offset.rawValue
+            offsetComponents.hour = -Int(offset)
+
+            let startTime = calendar.date(byAdding: offsetComponents, to: date)!
+            print("******************")
+            print("die voll krasse start time ist: \(startTime)")
+
+            let bolusesForCurrentDay = boluses.filter { $0.timestamp >= startTime && $0.type == .bolus }
+
+            let totalBolus = bolusesForCurrentDay.map { $0.amount ?? 0 }.reduce(0, +)
+            let roundedTotalBolus = Decimal(round(100 * Double(totalBolus)) / 100)
+
+            return "\(roundedTotalBolus)"
+        }
+
         private func setupSuspensions() {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -429,6 +457,7 @@ extension Home.StateModel:
         displayXgridLines = settingsManager.settings.xGridLines
         displayYgridLines = settingsManager.settings.yGridLines
         thresholdLines = settingsManager.settings.rulerMarks
+        tins = settingsManager.settings.tins
 
         setupGlucose()
     }
