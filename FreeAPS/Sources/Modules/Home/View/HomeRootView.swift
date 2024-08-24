@@ -1,3 +1,4 @@
+import Charts
 import CoreData
 import SpriteKit
 import SwiftDate
@@ -13,7 +14,12 @@ extension Home {
         @State var showCancelAlert = false
         @State var showCancelTTAlert = false
         @State var triggerUpdate = false
+        @State var scrollOffset = CGFloat.zero
+        @State var display = false
 
+        @Namespace var scrollSpace
+
+        let scrollAmount: CGFloat = 290
         let buttonFont = Font.custom("TimeButtonFont", size: 14)
 
         @Environment(\.managedObjectContext) var moc
@@ -120,7 +126,7 @@ extension Home {
                 battery: $state.battery,
                 name: $state.pumpName,
                 expiresAtDate: $state.pumpExpiresAtDate,
-                timerDate: $state.timerDate,
+                timerDate: $state.timerDate, timeZone: $state.timeZone,
                 state: state
             )
             .onTapGesture {
@@ -172,7 +178,7 @@ extension Home {
             return tempTarget.displayName
         }
 
-        var infoPanel: some View {
+        var info: some View {
             HStack(spacing: 10) {
                 ZStack {
                     HStack {
@@ -217,9 +223,12 @@ extension Home {
                         .padding(.trailing, 8)
                     }
                 }
-            }
-            .frame(maxWidth: .infinity, maxHeight: 30, alignment: .bottom)
-            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+            }.dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        }
+
+        var infoPanel: some View {
+            info
+                .frame(minHeight: 35, maxHeight: 35)
         }
 
         var mainChart: some View {
@@ -253,7 +262,10 @@ extension Home {
                     displayYgridLines: $state.displayYgridLines,
                     thresholdLines: $state.thresholdLines,
                     triggerUpdate: $triggerUpdate,
-                    overrideHistory: $state.overrideHistory
+                    overrideHistory: $state.overrideHistory,
+                    minimumSMB: $state.minimumSMB,
+                    maxBolus: $state.maxBolus,
+                    maxBolusValue: $state.maxBolusValue, useInsulinBars: $state.useInsulinBars
                 )
             }
             .padding(.bottom, 5)
@@ -267,20 +279,6 @@ extension Home {
                 let isOverride = fetchedPercent.first?.enabled ?? false
                 let isTarget = (state.tempTarget != nil)
                 HStack {
-                    Button { state.showModal(for: .dataTable) }
-                    label: {
-                        ZStack(alignment: Alignment(horizontal: .leading, vertical: .bottom)) {
-                            Image(systemName: "book")
-                                .symbolRenderingMode(.hierarchical)
-                                .resizable()
-                                .frame(
-                                    width: IAPSconfig.buttonSize * 0.9,
-                                    height: IAPSconfig.buttonSize
-                                )
-                                .foregroundColor(.gray)
-                        }
-                    }.buttonStyle(.borderless)
-                    Spacer()
                     Button { state.showModal(for: .addCarbs(editMode: false, override: false)) }
                     label: {
                         ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom)) {
@@ -300,10 +298,35 @@ extension Home {
                         }
                     }.buttonStyle(.borderless)
                     Spacer()
+                    Button {
+                        state.showModal(for: .bolus(
+                            waitForSuggestion: state.useCalc ? true : false,
+                            fetch: false
+                        ))
+                    }
+                    label: {
+                        Image(systemName: "syringe")
+                            .renderingMode(.template)
+                            .font(.custom("Buttons", size: 24))
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundColor(.insulin)
+                    Spacer()
+                    if state.allowManualTemp {
+                        Button { state.showModal(for: .manualTempBasal) }
+                        label: {
+                            Image("bolus1")
+                                .renderingMode(.template)
+                                .resizable()
+                                .frame(width: IAPSconfig.buttonSize, height: IAPSconfig.buttonSize, alignment: .bottom)
+                        }
+                        .foregroundColor(.insulin)
+                        Spacer()
+                    }
                     ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom)) {
                         Image(systemName: isOverride ? "person.fill" : "person")
                             .symbolRenderingMode(.palette)
-                            .font(.custom("Buttons", size: 30))
+                            .font(.custom("Buttons", size: 28))
                             .foregroundStyle(.purple)
                             .padding(8)
                             .background(isOverride ? .purple.opacity(0.15) : .clear)
@@ -340,31 +363,6 @@ extension Home {
                             }
                     }
                     Spacer()
-                    Button {
-                        state.showModal(for: .bolus(
-                            waitForSuggestion: true,
-                            fetch: false
-                        ))
-                    }
-                    label: {
-                        Image(systemName: "syringe")
-                            .renderingMode(.template)
-                            .font(.custom("Buttons", size: 24))
-                    }
-                    .buttonStyle(.borderless)
-                    .foregroundColor(.insulin)
-                    Spacer()
-                    if state.allowManualTemp {
-                        Button { state.showModal(for: .manualTempBasal) }
-                        label: {
-                            Image("bolus1")
-                                .renderingMode(.template)
-                                .resizable()
-                                .frame(width: IAPSconfig.buttonSize, height: IAPSconfig.buttonSize, alignment: .bottom)
-                        }
-                        .foregroundColor(.insulin)
-                        Spacer()
-                    }
                     Button { state.showModal(for: .settings) }
                     label: {
                         Image(systemName: "gear")
@@ -392,22 +390,17 @@ extension Home {
         }
 
         var chart: some View {
-            addColouredBackground()
+            let ratio = state.timeSettings ? 1.61 : 1.44
+            let ratio2 = state.timeSettings ? 1.65 : 1.51
+
+            return addColouredBackground()
                 .overlay {
-                    VStack {
+                    VStack(spacing: 0) {
                         infoPanel
-                        VStack(spacing: 0) {
-                            mainChart
-                            if state.timeSettings {
-                                timeSetting
-                            }
-                        }.chartBackground()
+                        mainChart
                     }
                 }
-                .frame(
-                    minHeight: UIScreen.main.bounds
-                        .height / (state.timeSettings ? 1.50 : fontSize < .extraExtraLarge ? 1.46 : 1.49)
-                )
+                .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
         }
 
         var carbsAndInsulinView: some View {
@@ -461,9 +454,54 @@ extension Home {
 
         var preview: some View {
             addBackground()
-                .frame(maxWidth: .infinity, minHeight: 170, alignment: .topLeading)
-                .overlay(alignment: .topLeading) {
+                .frame(minHeight: 200)
+                .overlay {
                     PreviewChart(readings: $state.readings, lowLimit: $state.lowGlucose, highLimit: $state.highGlucose)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .addShadows()
+                .padding(.horizontal, 10)
+                .onTapGesture {
+                    state.showModal(for: .statistics)
+                }
+        }
+
+        var activeIOBView: some View {
+            addBackground()
+                .frame(minHeight: 430)
+                .overlay {
+                    ActiveIOBView(
+                        data: $state.iobData,
+                        neg: $state.neg,
+                        tddChange: $state.tddChange,
+                        tddAverage: $state.tddAverage,
+                        tddYesterday: $state.tddYesterday,
+                        tdd2DaysAgo: $state.tdd2DaysAgo,
+                        tdd3DaysAgo: $state.tdd3DaysAgo,
+                        tddActualAverage: $state.tddActualAverage
+                    )
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .addShadows()
+                .padding(.horizontal, 10)
+        }
+
+        var activeCOBView: some View {
+            addBackground()
+                .frame(minHeight: 230)
+                .overlay {
+                    ActiveCOBView(data: $state.iobData)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .addShadows()
+                .padding(.horizontal, 10)
+        }
+
+        var loopPreview: some View {
+            addBackground()
+                .frame(minHeight: 190)
+                .overlay {
+                    LoopsView(loopStatistics: $state.loopStatistics)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 15))
                 .addShadows()
@@ -539,7 +577,8 @@ extension Home {
         @ViewBuilder private func headerView(_ geo: GeometryProxy) -> some View {
             addHeaderBackground()
                 .frame(
-                    maxHeight: fontSize < .extraExtraLarge ? 125 + geo.safeAreaInsets.top : 135 + geo.safeAreaInsets.top
+                    maxHeight: fontSize < .extraExtraLarge ? 125 + geo.safeAreaInsets.top : 135 + geo
+                        .safeAreaInsets.top
                 )
                 .overlay {
                     VStack {
@@ -556,12 +595,72 @@ extension Home {
                                     .frame(maxHeight: .infinity, alignment: .bottom)
                                     .padding(.bottom, 2)
                             }
-                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                            .padding(.horizontal, 5)
+                            .dynamicTypeSize(...DynamicTypeSize.xLarge)
+                            .padding(.horizontal, 10)
                         }
                     }.padding(.top, geo.safeAreaInsets.top).padding(.bottom, 10)
                 }
                 .clipShape(Rectangle())
+        }
+
+        @ViewBuilder private func glucoseHeaderView() -> some View {
+            addHeaderBackground()
+                .frame(maxHeight: 90)
+                .overlay {
+                    VStack {
+                        ZStack {
+                            glucosePreview.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                                .dynamicTypeSize(...DynamicTypeSize.medium)
+                        }
+                    }
+                }
+                .clipShape(Rectangle())
+        }
+
+        var glucosePreview: some View {
+            let data = state.glucose
+            let minimum = data.compactMap(\.glucose).min() ?? 0
+            let minimumRange = Double(minimum) * 0.8
+            let maximum = Double(data.compactMap(\.glucose).max() ?? 0) * 1.1
+
+            let high = state.highGlucose
+            let low = state.lowGlucose
+            let veryHigh = 198
+
+            return Chart(data) {
+                PointMark(
+                    x: .value("Time", $0.dateString),
+                    y: .value("Glucose", Double($0.glucose ?? 0) * (state.units == .mmolL ? 0.0555 : 1.0))
+                )
+                .foregroundStyle(
+                    (($0.glucose ?? 0) > veryHigh || Decimal($0.glucose ?? 0) < low) ? Color(.red) : Decimal($0.glucose ?? 0) >
+                        high ? Color(.yellow) : Color(.darkGreen)
+                )
+                .symbolSize(7)
+            }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .hour, count: 2)) { _ in
+                    AxisValueLabel(
+                        format: .dateTime.hour(.defaultDigits(amPM: .omitted))
+                            .locale(Locale(identifier: "sv"))
+                    )
+                    AxisGridLine()
+                }
+            }
+            .chartYAxis {
+                AxisMarks(values: .automatic(desiredCount: 3))
+            }
+            .chartYScale(
+                domain: minimumRange * (state.units == .mmolL ? 0.0555 : 1.0) ... maximum * (state.units == .mmolL ? 0.0555 : 1.0)
+            )
+            .chartXScale(
+                domain: Date.now.addingTimeInterval(-1.days.timeInterval) ... Date.now
+            )
+            .frame(maxHeight: 70)
+            .padding(.leading, 30)
+            .padding(.trailing, 32)
+            .padding(.top, 10)
+            .padding(.bottom, 10)
         }
 
         var timeSetting: some View {
@@ -574,7 +673,7 @@ extension Home {
                 Button("UI/UX Settings", action: { state.showModal(for: .statisticsConfig) })
             }
             .buttonStyle(.borderless)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(colorScheme == .dark ? .primary : Color(.darkGray))
             .font(.timeSettingFont)
             .padding(.vertical, 15)
             .background(TimeEllipse(characters: string.count))
@@ -582,20 +681,48 @@ extension Home {
 
         var body: some View {
             GeometryReader { geo in
-                VStack {
+                VStack(spacing: 0) {
                     headerView(geo)
+                    if !state.skipGlucoseChart, scrollOffset > scrollAmount {
+                        glucoseHeaderView()
+                            .transition(.move(edge: .top))
+                    }
+
                     ScrollView {
-                        VStack(spacing: 0) {
-                            RaisedRectangle()
-                            chart
-                            preview.padding(.top, 15)
+                        ScrollViewReader { _ in
+                            LazyVStack {
+                                chart
+                                if state.timeSettings { timeSetting }
+                                preview.padding(.top, state.timeSettings ? 5 : 15)
+                                loopPreview.padding(.top, 15)
+                                if state.iobData.count > 5 {
+                                    activeCOBView.padding(.top, 15)
+                                    activeIOBView.padding(.top, 15)
+                                }
+                            }
+                            .background(GeometryReader { geo in
+                                let offset = -geo.frame(in: .named(scrollSpace)).minY
+                                Color.clear
+                                    .preference(
+                                        key: ScrollViewOffsetPreferenceKey.self,
+                                        value: offset
+                                    )
+                            })
                         }
                     }
-                    .scrollIndicators(.hidden)
+                    .onPreferenceChange(ScrollViewOffsetPreferenceKey.self) { value in
+                        scrollOffset = value
+                        if !state.skipGlucoseChart, scrollOffset > scrollAmount {
+                            display.toggle()
+                        }
+                    }
                     buttonPanel(geo)
                 }
-                .background(.gray.opacity(IAPSconfig.backgroundOpacity * 2))
-                .edgesIgnoringSafeArea(.vertical)
+                .background(
+                    colorScheme == .light ? .gray.opacity(IAPSconfig.backgroundOpacity * 2) : .white
+                        .opacity(IAPSconfig.backgroundOpacity * 2)
+                )
+                .ignoresSafeArea(edges: .vertical)
                 .overlay {
                     if let progress = state.bolusProgress, let amount = state.bolusAmount {
                         ZStack {
@@ -653,7 +780,7 @@ extension Home {
                         .font(.suggestionError)
                         .padding(.bottom, 4)
                         .padding(.top, 8)
-                    Text(errorMessage).font(.buttonFont).foregroundColor(.loopRed)
+                    Text(errorMessage).font(.suggestionError).fontWeight(.semibold).foregroundColor(.orange)
                 } else if let suggestion = state.suggestion, (suggestion.bg ?? 100) == 400 {
                     Text("Invalid CGM reading (HIGH).").font(.suggestionError).bold().foregroundColor(.loopRed).padding(.top, 8)
                     Text("SMBs and High Temps Disabled.").font(.suggestionParts).foregroundColor(.white).padding(.bottom, 4)
